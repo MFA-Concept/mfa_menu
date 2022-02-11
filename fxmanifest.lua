@@ -1,13 +1,24 @@
 fx_version 'bodacious'
 game 'gta5'
 
-name 'FiveM Typescript Boilerplate'
-description 'A boilerplate for using Typescript in FiveM'
-author 'Remco Troost (d0p3t)'
-url 'https://github.com/d0p3t/fivem-ts-boilerplate'
+name 'MFA Menu'
+description 'A simple menu write in HTML and ts for FiveM'
+author 'MFA Concept'
+url 'https://github.com/MFA-Concept/mfa-menu'
 
-files {"dependency/**", "images/**", "fonts/**", "html/**", "dist/view/**"}
+files {
+    "dependency/menumanager_default.lua",
+    "dependency/menumanager_object.lua",
+    "dependency/menumanager_rageui_like.lua",
+    "dependency/menumanager.js",
+    "images/**", "fonts/**", 
+    "html/**", 
+    "dist/view/**"
+}
 
 ui_page "html/index.html"
 
-client_script {'dist/client/*.client.js'}
+client_scripts {
+    'dist/client/*.client.js',
+    'dependency/menumanager_default.lua'
+}

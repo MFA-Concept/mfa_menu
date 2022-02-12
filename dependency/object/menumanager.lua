@@ -13,6 +13,18 @@
                                                                                                 $$/
 --]]
 
+function caution()
+    if MenuManager == nil then
+        MenuManager = {}
+        print("^1Vous devez start le 'dependency/menumanager.lua' avant !")
+    else 
+        return
+    end
+
+end
+
+caution()
+
 MfaMenus = {};
 Menu = {};
 
@@ -21,7 +33,7 @@ Menu = {};
 --- @param title string title menu
 --- @param subtitle string subtitle menu
 --- @param parent string parent id
-function Menu:createMenu(id,title,subtitle, image, showTitle, centerTitle, parent, titleFont, globalFont)
+function Menu:createMenu(id,title,subtitle,parent)
     local o = {}
     self.__index = self;
     setmetatable(o,self);
@@ -29,17 +41,7 @@ function Menu:createMenu(id,title,subtitle, image, showTitle, centerTitle, paren
     o.title = title;
     o.subtitle = subtitle;
     o.parent = parent;
-    if o.parent == nil then
-        MenuManager.createMenu(o.id, o.title, o.subtitle);
-        o:fontGlobalForMenu(globalFont or "Comic Sans MS")
-    else
-        MenuManager.createMenu(o.id, o.title, o.subtitle, o.parent);
-        o:fontGlobalForMenu(globalFont or "Comic Sans MS")
-    end
-    o:onCloseMenu(function()end)
-    if image ~= nil then
-        o:banniere(image or "mfa_banniere.jpg", showTitle, centerTitle, titleFont or nil)
-    end
+    MenuManager.createMenu(o.id, o.title, o.subtitle, o.parent);
     return o;
 end
 
@@ -50,16 +52,8 @@ end
 ---@param rightLabel string define right label
 ---@param rightIcon string define right icon font awesome ex: "fas fa-user"
 ---@param cbk function The callback function for the button called when Enter is pressed
-function Menu:button(leftLabel, leftIcon, description, rightLabel, rightIcon, cb, submenu, isLock)
-    if submenu == nil then
-        MenuManager.button(self.id,leftLabel, leftIcon, description, rightLabel, rightIcon, function(data)
-            cb(data.action == "onHover", data.action == "onPressed", data.value)
-        end)
-    else
-        MenuManager.buttonSubmenu(self.id,leftLabel, leftIcon, description, rightIcon, submenu.id,function(data)
-            cb(data.action == "onHover", data.action == "onPressed", data.value)
-        end, isLock or false)
-    end
+function Menu:button(leftLabel, leftIcon, description, rightLabel, rightIcon, cbk)
+    MenuManager.button(self.id,leftLabel, leftIcon, description, rightLabel, rightIcon, cbk);
 end
 
 ---Create Banniere
@@ -102,9 +96,7 @@ end
 ---@param initialValue boolean define default value
 ---@param cbk function The callback function for the button called when Enter is pressed. the function received in param data => data.value contains true/false
 function Menu:checkbox(leftLabel, leftIcon, description, initialValue, cbk)
-    MenuManager.checkbox(self.id, leftLabel, leftIcon, description, initialValue, function(data)
-        cb(data.action == "onHover", data.action == "onPressed", data.value)
-    end)
+    MenuManager.checkbox(self.id, leftLabel, leftIcon, description, initialValue, cbk)
 end
 ---Create submenu button
 ---@param leftLabel string define left label
@@ -124,10 +116,8 @@ end
 ---@param description string|object define description for the current item menu
 ---@param data object the data in listbox ex {"test1","test2","test3"} or {1,2,3,4,5}
 ---@param cbk function The callback function for the button called when Enter is pressed.The function received in param data => data.value contains current value of selected in listbox
-function Menu:listbox(leftLabel, leftIcon, description, data, cb)
-    MenuManager.listbox(self.id, leftLabel, leftIcon, description, data, function(data)
-        cb(data.action == "onHover", data.action == "onPressed", data.action == "onChange", data.value)
-    end)
+function Menu:listbox(leftLabel, leftIcon, description, data, cbk)
+    MenuManager.listbox(self.id, leftLabel, leftIcon, description, data, cbk)
 end
 
 
@@ -148,9 +138,7 @@ end
 ---@param maxVal number
 ---
 function Menu:progressbar(leftLabel, leftIcon, description, userCanInteract, value, step, maxVal, cbk)
-    MenuManager.progressbar(self.id, leftLabel, leftIcon, description, userCanInteract, value, step, maxVal, function(data)
-        cb(data.action == "onHover", data.action == "onPressed", data.action == "onChange", data.value)
-    end)
+    MenuManager.progressbar(self.id, leftLabel, leftIcon, description, userCanInteract, value, step, maxVal, cbk)
 end
 
 ---Create Input
@@ -160,9 +148,7 @@ end
 ---@param type string define type of input ("text"/"date"/"number")
 ---@param cbk function The callback function for the button called when Enter is pressed.The function received in param data => data.value contains the value
 function Menu:input(leftLabel, leftIcon, description, type, cbk)
-    MenuManager.input(self.id, leftLabel, leftIcon, description, type, function(data)
-        cb(data.action == "onHover", data.action == "onPressed", data.action == "onChange", data.value)
-    end)
+    MenuManager.input(self.id, leftLabel, leftIcon, description, type, cbk)
 end
 ---Create Togggle
 ---@param leftLabel string define left label
@@ -191,11 +177,8 @@ function Menu:closeMenu()
 end
 
 --- Check if the menu is visible the response come in callback.
-function Menu:isVisible(clearIndex ,cb)
-    MenuManager.isVisible(self.id, function() 
-        self:clearMenuItem(clearIndex)
-        cb()
-    end);
+function Menu:isVisible(cb)
+    MenuManager.isVisible(self.id,cb);
 end
 
 --- Call when the menu is closed.
@@ -214,4 +197,20 @@ end
 --- Refresh menu
 function Menu:refresh()
     MenuManager.refresh(self.id);
+end
+
+function Menu:getNbItems(cb)
+    addToPool(function() TriggerEvent("mfa_menu:getNbItems",self.id,cb); end);
+end
+
+function Menu:changeTitle(title)
+    addToPool(function() TriggerEvent("mfa_menu:changeTitle",self.id,title); end);
+end
+
+function Menu:changeSubtitle(subtitle)
+    addToPool(function() TriggerEvent("mfa_menu:changeSubtitle",self.id,subtitle); end);
+end
+
+function Menu:getCurrentIndex(cb)
+    addToPool(function() TriggerEvent("mfa_menu:getCurrentIndex",self.id,cb); end);
 end

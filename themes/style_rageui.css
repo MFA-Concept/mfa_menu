@@ -28,48 +28,6 @@ html {
     width: 100%
 }
 
-.container {
-    padding: 15px;
-}
-
-.menu-title {
-    padding: 1.2rem;
-    background: black;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    font-size: 2rem;
-    font-family: "Astral-Sisters";
-    background: url("nui://mfa_menu/images/AMJ_banniere.jpg");
-    background-size: cover !important;
-    /*color:transparent;*/
-}
-
-.menu {
-    color: white;
-    width: 20%;
-    min-width: 300px;
-}
-
-.menu-subtitle {
-    display: flex;
-    justify-content: space-between;
-    background: black;
-    padding: 0.4rem;
-}
-
-.menu-body {
-    background: rgba(0, 0, 0, 0.7);
-    max-height: 240px;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.menu-item {
-    height: 20px;
-    align-items: center;
-}
-
 ::-webkit-scrollbar {
     width: 0.2em;
 }
@@ -83,6 +41,62 @@ html {
     outline: 1px solid slategrey;
 }
 
+.container {
+    padding-top: 16px;
+    padding-left: 28px;
+    /* padding-top: 16.5px;
+    padding-left: 28em; */
+}
+
+.menu {
+    color: white;
+    width: 27em;
+    min-width: 300px;
+}
+
+.menu-title {
+    /* padding: 0rem; */
+    height: 1.92em;
+    max-height: 3.6em;
+    line-height: 2.25em;
+    width: 100%;
+    letter-spacing: auto;
+    background: black;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    font-size: 3.5rem;
+    font-family: "Astral-Sisters";
+    background: url("nui://mfa_menu/images/mfa_banniere.jpg");
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    /*color:transparent;*/
+}
+
+.menu-subtitle {
+    display: flex;
+    justify-content: space-between;
+    background: black;
+    padding: 0.6rem;
+}
+
+.menu-body {
+    /* background: rgba(0, 0, 0, 0.7); */
+    background: rgba(0, 0, 0, 0.534);
+    max-height: 340px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.menu-item {
+    height: 28px;
+    align-items: center;
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
 
 /* .menu-body::-webkit-scrollbar {
   width: 16px;
@@ -94,12 +108,6 @@ html {
   -webkit-box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.1),
     inset 0 -1px 0 rgba(0, 0, 0, 0.07);
 } */
-
-.menu-item {
-    padding: 5px;
-    display: flex;
-    justify-content: space-between;
-}
 
 .hover {
     background: white;
@@ -311,9 +319,14 @@ input:checked+.toggle:before {
 /*  */
 
 .menu-static-panel {
-    background: rgba(0, 0, 0, 0.7);
-    margin-top: 20px;
+    border-top: 4px solid black;
+    background: rgba(0, 0, 0, 0.534);
+    margin-top: 3px;
     padding: 5px;
+    height: 2em;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
 
 .data-display {

@@ -119,8 +119,12 @@ function Menu:toggleMenu(cb)
         if visible then
             Menu:closeMenu()
         else
-            cb()
-            self:openMenu()
+            if cb ~= nil then
+                cb()
+                self:openMenu()
+            else
+                print("^1Aucune function défini sur la touche")
+            end
         end
     end)
 end
@@ -285,7 +289,7 @@ function Menu:getNbItems(cb)
     addToPool(function() TriggerEvent("mfa_menu:getNbItems",self.id,cb); end);
 end
 
-function MenuManager.changeNumberMaxItemByMenu(number)
+function Menu.changeNumberMaxItemByMenu(number)
     addToPool(function() TriggerEvent("mfa_menu:changeNumberMaxItemByMenu",number); end);
 end
 

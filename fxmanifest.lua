@@ -18,7 +18,4 @@ files {
 
 ui_page "html/index.html"
 
-client_scripts {
-    'dist/client/*.client.js',
-    'dependency/menumanager_default.lua'
-}
+client_script {'dist/client/*.client.js'}

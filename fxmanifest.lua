@@ -7,10 +7,10 @@ author 'MFA Concept'
 url 'https://github.com/MFA-Concept/mfa-menu'
 
 files {
-    "dependency/menumanager.lua",
-    "dependency/object/menumanager.lua",
-    "dependency/rageui/menumanager.lua",
-    "dependency/menumanager.js",
+    "dependency/*.lua",
+    "dependency/**/*.lua",
+    "dependency/*.js",
+    "dependency/**/*.js",
     "images/**", "fonts/**", 
     "html/**", 
     "dist/view/**"

@@ -91,10 +91,10 @@ function Menu:createMenu(title,subtitle, image, parent, titleFont, globalFont, s
     if centerTitle == false then title = title.."ㅤ"; c.centerTitle = false end
     if showTitle == false then c.showTitle = false end
     o.id = Menu.uuid()
-    print(o.id)
     o.title = title
     o.subtitle = subtitle;
     o.parent = parent;
+    o.data = json.encode(o)
     if parent == nil then
         addToPool(function() TriggerEvent("mfa_menu:createMenu",o.id, o.title, o.subtitle) end)
     else
@@ -105,28 +105,6 @@ function Menu:createMenu(title,subtitle, image, parent, titleFont, globalFont, s
     end) end)
     addToPool(function() TriggerEvent("mfa_menu:banniere", o.id, image, c.showTitle, c.centerTitle, titleFont or nil) end)
     return o;
-end
-
-function Menu:keyMap(key, desc, cb)
-    RegisterCommand(GetCurrentResourceName().."created_with_MFA_Menu_by_MFA_Concept"..self.id, function()
-        self:toggleMenu(cb)
-    end)
-    RegisterKeyMapping(GetCurrentResourceName().."created_with_MFA_Menu_by_MFA_Concept"..self.id, desc, "keyboard", key)
-end
-
-function Menu:toggleMenu(cb)
-    self:isVisible(function(visible)
-        if visible then
-            Menu:closeMenu()
-        else
-            if cb ~= nil then
-                cb()
-                self:openMenu()
-            else
-                print("^1Aucune function défini sur la touche")
-            end
-        end
-    end)
 end
 
 ---Create Button
@@ -144,6 +122,10 @@ function Menu:button(leftLabel, leftIcon, description, rightLabel, rightIcon, cb
     else
         addToPool(function() TriggerEvent("mfa_menu:buttonSubmenu", self.id, leftLabel, leftIcon, description, rightIcon or "fa-solid fa-right-from-bracket", submenu.id,function(data)
                 if cb then cb(data.action == "onHover", data.action == "onPressed", data.value) end 
+                if data.action == "onPressed" then
+                    submenu:clearMenuItem(0)
+                    submenu:menu()
+                end
             end, isLock or false) 
         end)
     end
@@ -230,9 +212,53 @@ function Menu:clearMenuItem(index)
     addToPool(function() TriggerEvent("mfa_menu:clearMenuItem", self.id,index) end)
 end
 
+function Menu:keyMap(key, desc, cbOnOpen, cbOnClose)
+    RegisterCommand(self.id.."_MFA_Concept", function(source, args, rawCommand)
+        self:toggleMenu(cbOnOpen, cbOnClose)
+    end)
+    RegisterKeyMapping(self.id.."_MFA_Concept", desc, "keyboard", key)
+end
+
+function Menu:registerCommand(name, cb)
+    RegisterCommand(name, function(source, args, rawCommand)
+        local argsconcat = table.concat(args, " ")
+        cb(argsconcat)
+    end)
+end
+
+function Menu:toggleMenu(cbOnOpen, cbOnClose)
+    self:isVisible(function(visible)
+        if visible then
+            if cbOnClose ~= nil then
+                cbOnClose()
+            end
+            Menu:closeMenu()
+        else
+            if cbOnOpen ~= nil then
+                cbOnOpen()
+            end
+            self:clearMenuItem(0)
+            self:menu()
+            addToPool(function() TriggerEvent("mfa_menu:select",self.id) end)
+        end
+    end)
+end
+
 ---open the specific menu
 function Menu:openMenu()
-    addToPool(function() TriggerEvent("mfa_menu:select",self.id) end)
+    self:isVisible(function(visible)
+        if not visible then
+            self:clearMenuItem(0)
+            self:menu()
+            addToPool(function() TriggerEvent("mfa_menu:select",self.id) end)
+        end
+    end)
+end
+
+function Menu:reload()
+    self:clearMenuItem(0)
+    self:menu()
+    self:refresh()
 end
 
 ---close menu
@@ -304,3 +330,57 @@ end
 function Menu:getCurrentIndex(cb)
     addToPool(function() TriggerEvent("mfa_menu:getCurrentIndex",self.id,cb); end);
 end
+
+Menu.ShowHelpNotification = function(msg, thisFrame, beep, duration)
+    AddTextEntry('mfaHelpNotification', msg)
+
+    if thisFrame then
+        DisplayHelpTextThisFrame('mfaHelpNotification', false)
+    else
+        if beep == nil then
+            beep = true
+        end
+        BeginTextCommandDisplayHelp('mfaHelpNotification')
+        EndTextCommandDisplayHelp(0, false, beep, duration or -1)
+    end
+end
+
+---@param msg string
+Menu.ShowNotification = function(msg)
+    SetNotificationTextEntry('STRING')
+    AddTextComponentString(msg)
+    DrawNotification(0,1)
+end
+
+RegisterNetEvent('shownotification')
+AddEventHandler('shownotification', function(message)
+    Menu.ShowNotification(message)
+end)
+
+---AdvancedNotification
+
+---@param sender string
+---@param subject string
+---@param msg string
+---@param textureDict string
+---@param iconType number
+---@param flash boolean
+---@param saveToBrief boolean
+---@param hudColorIndex number
+Menu.ShowAdvancedNotification = function(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)
+    if saveToBrief == nil then
+        saveToBrief = true
+    end
+    AddTextEntry('mfaAdvancedNotification', msg)
+    BeginTextCommandThefeedPost('mfaAdvancedNotification')
+    if hudColorIndex then
+        ThefeedNextPostBackgroundColor(hudColorIndex)
+    end
+    EndTextCommandThefeedPostMessagetext(textureDict or "CHAR_MFA", textureDict or "CHAR_MFA", false, iconType or 1, sender or "MFA Concept", subject or "mfa_menu")
+    EndTextCommandThefeedPostTicker(flash, saveToBrief)
+end
+
+RegisterNetEvent('showadvancednotification')
+AddEventHandler('showadvancednotification', function(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)
+    Menu.ShowAdvancedNotification(sender, subject, msg, textureDict, iconType, flash, saveToBrief, hudColorIndex)
+end)

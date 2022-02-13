@@ -8,7 +8,9 @@ url 'https://github.com/MFA-Concept/mfa-menu'
 
 files {
     "dependency/*.lua",
+    "dependency/**/*.lua",
     "dependency/*.js",
+    "dependency/**/*.js",
     "images/**", "fonts/**", 
     "html/**", 
     "dist/view/**"

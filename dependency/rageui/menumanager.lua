@@ -16,6 +16,18 @@
 MfaMenus = {};
 Menu = {};
 
+local mythread = false
+local button = {
+    E_Key = 51,
+    ATTACK = 142,
+    ATTACK2 = 263,
+    ATTACK3 = 24,
+    RELOAD = 45,
+    MELEEATTACK = 140,
+    AIM = 25,
+    WEAPON_WHEEL = 37
+}
+
 Menu.random = math.random
 function Menu.uuid()
     local template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
@@ -97,12 +109,15 @@ function Menu:createMenu(title,subtitle, image, parent, titleFont, globalFont, s
     o.data = json.encode(o)
     if parent == nil then
         addToPool(function() TriggerEvent("mfa_menu:createMenu",o.id, o.title, o.subtitle) end)
+        addToPool(function() TriggerEvent("mfa_menu:onCloseMenu", o.id,function()
+            mythread = false
+        end) end)
     else
         addToPool(function() TriggerEvent("mfa_menu:createMenu",o.id, o.title, o.subtitle, parent.id) end)
+        addToPool(function() TriggerEvent("mfa_menu:onCloseMenu", o.id,function()
+        end) end)
     end
     addToPool(function() TriggerEvent("mfa_menu:fontGlobalForMenu", o.id, globalFont or "Cologne 1960") end)
-    addToPool(function() TriggerEvent("mfa_menu:onCloseMenu", o.id,function()
-    end) end)
     addToPool(function() TriggerEvent("mfa_menu:banniere", o.id, image, c.showTitle, c.centerTitle, titleFont or nil) end)
     return o;
 end
@@ -237,6 +252,15 @@ function Menu:toggleMenu(cbOnOpen, cbOnClose)
             if cbOnOpen ~= nil then
                 cbOnOpen()
             end
+            mythread = true
+            CreateThread(function()
+                while mythread do
+                    for _, v in pairs(button) do
+                        DisableControlAction(2, v, true)
+                    end
+                    Wait(0)
+                end
+            end)
             self:clearMenuItem(0)
             self:menu()
             addToPool(function() TriggerEvent("mfa_menu:select",self.id) end)
@@ -248,6 +272,15 @@ end
 function Menu:openMenu()
     self:isVisible(function(visible)
         if not visible then
+            mythread = true
+            CreateThread(function()
+                while mythread do
+                    for _, v in pairs(button) do
+                        DisableControlAction(2, v, true)
+                    end
+                    Wait(0)
+                end
+            end)
             self:clearMenuItem(0)
             self:menu()
             addToPool(function() TriggerEvent("mfa_menu:select",self.id) end)

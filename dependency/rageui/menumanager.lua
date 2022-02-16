@@ -15,18 +15,34 @@
 
 MfaMenus = {};
 Menu = {};
+RageUI = Menu
 
-local mythread = false
-local button = {
-    E_Key = 51,
-    ATTACK = 142,
-    ATTACK2 = 263,
-    ATTACK3 = 24,
-    RELOAD = 45,
-    MELEEATTACK = 140,
-    AIM = 25,
-    WEAPON_WHEEL = 37
-}
+local pools = {}
+
+local mfaMenuIsEnable = false
+
+function clearPool()
+    for i, v in pairs(pools) do
+        v()
+    end
+end
+
+function checkPools()
+    if not mfaMenuIsEnable then
+        TriggerEvent("mfa_menu:isEnabled", function() mfaMenuIsEnable = true clearPool() end)
+        SetTimeout(500,function() checkPools() end)
+    end
+end
+
+checkPools()
+
+function addToPool(cb)
+    if not mfaMenuIsEnable then
+        table.insert(pools,cb)
+    else
+        cb()
+    end
+end
 
 Menu.random = math.random
 function Menu.uuid()
@@ -35,33 +51,6 @@ function Menu.uuid()
         local v = (c == 'x') and Menu.random(0, 0xf) or Menu.random(8, 0xb)
         return string.format('%x', v)
     end)
-end
-
-local pools = {};
-
-local mfaMenuIsEnable = false;
-
-function clearPool()
-    for i, v in pairs(pools) do
-        v();
-    end
-end
-
-function checkPools()
-    if not mfaMenuIsEnable then
-        TriggerEvent("mfa_menu:isEnabled", function() mfaMenuIsEnable = true; clearPool(); end)
-        SetTimeout(500,function() checkPools() end);
-    end
-end
-
-checkPools()
-
-function addToPool(cb)
-    if not mfaMenuIsEnable then
-        table.insert(pools,cb);
-    else
-       cb();
-    end
 end
 
 ---Set the font menu, the basic fonts are that of webfonts:
@@ -106,19 +95,18 @@ function Menu:createMenu(title,subtitle, image, parent, titleFont, globalFont, s
     o.title = title
     o.subtitle = subtitle;
     o.parent = parent;
-    o.data = json.encode(o)
-    if parent == nil then
+    o.menu = nil
+    if o.parent == nil then
         addToPool(function() TriggerEvent("mfa_menu:createMenu",o.id, o.title, o.subtitle) end)
         addToPool(function() TriggerEvent("mfa_menu:onCloseMenu", o.id,function()
-            mythread = false
         end) end)
     else
         addToPool(function() TriggerEvent("mfa_menu:createMenu",o.id, o.title, o.subtitle, parent.id) end)
-        addToPool(function() TriggerEvent("mfa_menu:onCloseMenu", o.id,function()
-        end) end)
+        addToPool(function() TriggerEvent("mfa_menu:onCloseMenu", o.id,function() end)
+        end)
     end
     addToPool(function() TriggerEvent("mfa_menu:fontGlobalForMenu", o.id, globalFont or "Cologne 1960") end)
-    addToPool(function() TriggerEvent("mfa_menu:banniere", o.id, image, c.showTitle, c.centerTitle, titleFont or nil) end)
+    addToPool(function() TriggerEvent("mfa_menu:banniere", o.id, image or "mfa_banniere.jpg", c.showTitle, c.centerTitle, titleFont or nil) end)
     return o;
 end
 
@@ -132,17 +120,15 @@ end
 function Menu:button(leftLabel, leftIcon, description, rightLabel, rightIcon, cb, submenu, isLock)
     if submenu == nil then
         addToPool(function() TriggerEvent("mfa_menu:button", self.id, leftLabel, leftIcon, description, rightLabel, rightIcon, function(data)
-            if cb then cb(data.action == "onHover", data.action == "onPressed", data.value) end end)
-        end)
+            if cb then cb(data.action == "onHover", data.action == "onPressed", data.value) end
+        end) end)
     else
         addToPool(function() TriggerEvent("mfa_menu:buttonSubmenu", self.id, leftLabel, leftIcon, description, rightIcon or "fa-solid fa-right-from-bracket", submenu.id,function(data)
-                if cb then cb(data.action == "onHover", data.action == "onPressed", data.value) end 
-                if data.action == "onPressed" then
-                    submenu:clearMenuItem(0)
-                    submenu:menu()
-                end
-            end, isLock or false) 
-        end)
+            if cb then cb(data.action == "onHover", data.action == "onPressed", data.value) end
+            if data.action == "onPressed" then
+                submenu:openMenu()
+            end
+        end, isLock or false) end)
     end
 end
 
@@ -152,12 +138,15 @@ end
 ---@param description string|object define description for the current item menu
 ---@param initialValue boolean define default value
 ---@param cbk function The callback function for the button called when Enter is pressed. the function received in param data => data.value contains true/false
-function Menu:checkbox(leftLabel, leftIcon, description, initialValue, cb)
-    local value = false
+function Menu:checkbox(leftLabel, leftIcon, description, initialValue, cb, submenu)
     addToPool(function() TriggerEvent("mfa_menu:checkbox", self.id, leftLabel, leftIcon, description, initialValue, function(data)
-            cb(data.action == "onHover", data.action == "onPressed", data.value)
-        end) 
-    end)
+        cb(data.action == "onHover", data.action == "onPressed", data.value)
+        if submenu ~= nil and data.action == "onPressed" then
+            if data.value then
+                submenu:openMenu()
+            end
+        end
+    end) end)
 end
 
 ---Create listbox
@@ -166,23 +155,31 @@ end
 ---@param description string|object define description for the current item menu
 ---@param data object the data in listbox ex {"test1","test2","test3"} or {1,2,3,4,5}
 ---@param cbk function The callback function for the button called when Enter is pressed.The function received in param data => data.value contains current value of selected in listbox
-function Menu:listbox(leftLabel, leftIcon, description, data, cb)
+function Menu:listbox(leftLabel, leftIcon, description, data, cb, submenu)
     addToPool(function() TriggerEvent("mfa_menu:listbox", self.id, leftLabel, leftIcon, description, data, function(data)
-        cb(data.action == "onHover", data.action == "onPressed", data.action == "onChange", data.value) end)
-    end)
+        cb(data.action == "onHover", data.action == "onPressed", data.action == "onChange", data.value)
+        if submenu ~= nil and data.action == "onPressed" then
+            submenu:openMenu()
+        end
+    end) end)
 end
-
 
 ---Create Separator
 ---@param label string label separator
 ---@param icon string icon separator
 ---@param enableLines boolean
 function Menu:separator(label, icon,enableLines, animated)
-    if animated then 
+    if animated then
         label = "marquee|"..label
     end
     addToPool(function() TriggerEvent("mfa_menu:separator",self.id, label or "", icon or "", enableLines or false) end)
 end
+
+---Create Separator Line
+function Menu:line()
+    addToPool(function() TriggerEvent("mfa_menu:separator",self.id, "━━━━━━━━━━━━━━━━━━━━━━", "", false) end)
+end
+
 ---Create Progressbar
 ---@param leftLabel string define left label
 ---@param leftIcon string define left icon font awesome ex: "fas fa-user"
@@ -192,10 +189,13 @@ end
 ---@param step number
 ---@param maxVal number
 ---
-function Menu:progressbar(leftLabel, leftIcon, description, userCanInteract, value, step, maxVal, cb)
+function Menu:progressbar(leftLabel, leftIcon, description, userCanInteract, value, step, maxVal, cb, submenu)
     addToPool(function() TriggerEvent("mfa_menu:progressbar", self.id, leftLabel, leftIcon, description, userCanInteract, value, step, maxVal, function(data)
-        cb(data.action == "onHover", data.action == "onPressed", data.action == "onChange", data.value) end)
-    end)
+        cb(data.action == "onHover", data.action == "onPressed", data.action == "onChange", data.value)
+        if submenu ~= nil and data.action == "onPressed" then
+            submenu:openMenu()
+        end
+    end) end)
 end
 
 ---Create Input
@@ -204,10 +204,13 @@ end
 ---@param description string|object define description for the current item menu
 ---@param type string define type of input ("text"/"date"/"number")
 ---@param cbk function The callback function for the button called when Enter is pressed.The function received in param data => data.value contains the value
-function Menu:input(leftLabel, leftIcon, description, type, cb)
+function Menu:input(leftLabel, leftIcon, description, type, cb, submenu)
     addToPool(function() TriggerEvent("mfa_menu:input", self.id, leftLabel, leftIcon, description, type, function(data)
-        cb(data.action == "onHover", data.action == "onPressed", data.value) end)
-    end)
+        cb(data.action == "onHover", data.action == "onPressed", data.action == "onChange", data.value)
+        if submenu ~= nil and data.action == "onPressed" then
+            submenu:openMenu()
+        end
+    end) end)
 end
 ---Create Togggle
 ---@param leftLabel string define left label
@@ -215,10 +218,13 @@ end
 ---@param description string|object define description for the current item menu
 ---@param initialValue boolean define default value
 ---@param cbk function The callback function for the button called when Enter is pressed. the function received in param data => data.value contains true/false
-function Menu:toggle(leftLabel, leftIcon, description, initialValue, cb)
+function Menu:toggle(leftLabel, leftIcon, description, initialValue, cb, submenu)
     addToPool(function() TriggerEvent("mfa_menu:toggle",self.id, leftLabel, leftIcon, description, initialValue, function(data)
-        cb(data.action == "onHover", data.action == "onPressed", data.value) end)
-    end)
+        cb(data.action == "onHover", data.action == "onPressed", data.value)
+        if submenu ~= nil and data.action == "onPressed" then
+            submenu:openMenu()
+        end
+    end) end)
 end
 
 ---remove all menu items from the specified index until the end
@@ -227,11 +233,11 @@ function Menu:clearMenuItem(index)
     addToPool(function() TriggerEvent("mfa_menu:clearMenuItem", self.id,index) end)
 end
 
-function Menu:keyMap(key, desc, cbOnOpen, cbOnClose)
-    RegisterCommand(self.id.."_MFA_Concept", function(source, args, rawCommand)
+function Menu:keyMap(name ,key, desc, cbOnOpen, cbOnClose)
+    RegisterCommand(name.."_MFA_Concept", function(source, args, rawCommand)
         self:toggleMenu(cbOnOpen, cbOnClose)
     end)
-    RegisterKeyMapping(self.id.."_MFA_Concept", desc, "keyboard", key)
+    RegisterKeyMapping(name.."_MFA_Concept", desc, "keyboard", key)
 end
 
 function Menu:registerCommand(name, cb)
@@ -252,17 +258,8 @@ function Menu:toggleMenu(cbOnOpen, cbOnClose)
             if cbOnOpen ~= nil then
                 cbOnOpen()
             end
-            mythread = true
-            CreateThread(function()
-                while mythread do
-                    for _, v in pairs(button) do
-                        DisableControlAction(2, v, true)
-                    end
-                    Wait(0)
-                end
-            end)
-            self:clearMenuItem(0)
-            self:menu()
+            -- todo self thread
+            self:reload()
             addToPool(function() TriggerEvent("mfa_menu:select",self.id) end)
         end
     end)
@@ -270,29 +267,25 @@ end
 
 ---open the specific menu
 function Menu:openMenu()
-    self:isVisible(function(visible)
-        if not visible then
-            mythread = true
-            CreateThread(function()
-                while mythread do
-                    for _, v in pairs(button) do
-                        DisableControlAction(2, v, true)
-                    end
-                    Wait(0)
-                end
-            end)
-            self:clearMenuItem(0)
-            self:menu()
-            addToPool(function() TriggerEvent("mfa_menu:select",self.id) end)
-        end
-    end)
+    self:reload()
+    addToPool(function() TriggerEvent("mfa_menu:select",self.id) end)
 end
 
 function Menu:reload()
-    self:clearMenuItem(0)
-    self:menu()
-    self:refresh()
+    if self.menu == nil then
+        print("^1[ERROR]^7: Not implemented function for attribute [menu] ex: ^4myMenu.menu = function() end^7")
+    else
+        self:clearMenuItem(0)
+        self.menu()
+    end
 end
+
+--not tested yet
+function Menu:goBack(id)
+    self:closeMenu()
+    id:openMenu()
+end
+--
 
 ---close menu
 function Menu:closeMenu()
@@ -301,24 +294,22 @@ end
 
 --- Check if the menu is visible the response come in callback.
 function Menu:isVisible(cb)
-    addToPool(function() TriggerEvent("mfa_menu:isVisible",self.id,cb); end);
+    addToPool(function() TriggerEvent("mfa_menu:isVisible",self.id,cb) end)
 end
 
 --- Call when the menu is closed.
 function Menu:onCloseMenu(cb)
-    TriggerEvent("mfa_menu:onCloseMenu",self.id, function()
+    addToPool(function() TriggerEvent("mfa_menu:onCloseMenu",self.id, function()
         cb()
-    end)
+    end) end)
 end
 --- Change descrition content.
 function Menu:changeDesc(content, show)
-    addToPool(function()
-        if not show then 
-            addToPool(function() TriggerEvent("mfa_menu:changeDesc",self.id, content) end)
-        else
-            addToPool(function() TriggerEvent("mfa_menu:changeDescAndShow",self.id, content) end)
-        end
-    end)
+    if not show then
+        addToPool(function() TriggerEvent("mfa_menu:changeDesc",self.id, content) end)
+    else
+        addToPool(function() TriggerEvent("mfa_menu:changeDescAndShow",self.id, content) end)
+    end
 end
 
 --- Refresh menu
@@ -326,6 +317,27 @@ function Menu:refresh()
     addToPool(function() TriggerEvent("mfa_menu:refresh",self.id) end)
 end
 
+function Menu:getNbItems(cb)
+    addToPool(function() TriggerEvent("mfa_menu:getNbItems",self.id,cb) end)
+end
+
+function Menu.changeNumberMaxItemByMenu(number)
+    addToPool(function() TriggerEvent("mfa_menu:changeNumberMaxItemByMenu",number) end)
+end
+
+function Menu:changeTitle(title)
+    addToPool(function() TriggerEvent("mfa_menu:changeTitle",self.id,title) end)
+end
+
+function Menu:changeSubtitle(subtitle)
+    addToPool(function() TriggerEvent("mfa_menu:changeSubtitle",self.id,subtitle) end)
+end
+
+function Menu:getCurrentIndex(cb)
+    addToPool(function() TriggerEvent("mfa_menu:getCurrentIndex",self.id,cb) end)
+end
+
+-- not needed but added
 function Menu.KeyboardInput(entryTitle, textEntry, inputText, maxLength)
     AddTextEntry(entryTitle, textEntry)
     DisplayOnscreenKeyboard(1, entryTitle, '', inputText, '', '', '', maxLength)
@@ -342,26 +354,6 @@ function Menu.KeyboardInput(entryTitle, textEntry, inputText, maxLength)
         Citizen.Wait(500)
         return nil
     end
-end
-
-function Menu:getNbItems(cb)
-    addToPool(function() TriggerEvent("mfa_menu:getNbItems",self.id,cb); end);
-end
-
-function Menu.changeNumberMaxItemByMenu(number)
-    addToPool(function() TriggerEvent("mfa_menu:changeNumberMaxItemByMenu",number); end);
-end
-
-function Menu:changeTitle(title)
-    addToPool(function() TriggerEvent("mfa_menu:changeTitle",self.id,title); end);
-end
-
-function Menu:changeSubtitle(subtitle)
-    addToPool(function() TriggerEvent("mfa_menu:changeSubtitle",self.id,subtitle); end);
-end
-
-function Menu:getCurrentIndex(cb)
-    addToPool(function() TriggerEvent("mfa_menu:getCurrentIndex",self.id,cb); end);
 end
 
 Menu.ShowHelpNotification = function(msg, thisFrame, beep, duration)

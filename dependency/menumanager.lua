@@ -57,6 +57,7 @@ end
 --- @param parent string parent id
 function MenuManager.createMenu(id,title,subtitle,parent)
     addToPool(function() TriggerEvent("mfa_menu:createMenu",id,title,subtitle,parent) end);
+    MenuManager.separator(id,"marquee|Default separator use MenuManager.clearMenuItem('MyMenuId')","");
 end
 
 ---Create Button

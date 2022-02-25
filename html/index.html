@@ -11,7 +11,7 @@
 </head>
 <body>
     <div class="container"></div>
-
+    <div class="colorpicker"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.2/dist/chart.min.js"></script>
 <script src="js/all.min.js"></script>
@@ -23,45 +23,5 @@
 <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"
     integrity="sha256-hlKLmzaRlE8SCJC1Kw8zoUbU8BxA+8kR3gseuKfMjxA=" crossorigin="anonymous"></script>
     <script src="js/app/app.js"></script>
-    <script>
-        Coloris({
-            // parent container
-
-            //
-            themeMode: 'light',
-            // The bound input fields are wrapped in a div that adds a thumbnail showing the current color
-            // and a button to open the color picker (for accessibility only).
-            wrap: true,
-            // enable format toggle button
-            formatToggle: true,
-            // Margin in px
-            margin: 2,
-            // Show only the color swatches in the picker dialog
-            swatchesOnly: false,
-            // disable alpha
-            alpha: true,
-            // not focus the color value input
-            focusInput: true,
-            // auto close
-            autoClose: false,
-            // config the clear button
-            clearButton: {
-                show: false,
-                label: 'Clear'
-            },
-            // a11y
-            a11y: {
-                open: 'Open color picker',
-                close: 'Close color picker',
-                marker: 'Saturation: {s}. Brightness: {v}.',
-                hueSlider: 'Hue slider',
-                alphaSlider: 'Opacity slider',
-                input: 'Color value field',
-                format: 'Color format',
-                swatch: 'Color swatch',
-                instruction: 'Saturation and brightness selector. Use up, down, left and right arrow keys to select.'
-            }
-        });
-    </script>
 </body>
 </html>

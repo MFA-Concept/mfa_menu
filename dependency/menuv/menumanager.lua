@@ -477,4 +477,4 @@ function Menu:ChangeNumberMaxItemByMenu(number)
     addToPool(function() TriggerEvent("mfa_menu:changeNumberMaxItemByMenu",number); end);
 end
 
-Menu:ChangeNumberMaxItemByMenu(9) -- 11 if menuv like
+Menu:ChangeNumberMaxItemByMenu(9) -- 11 for menuv like  css style

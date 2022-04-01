@@ -191,7 +191,10 @@ end
 function Menu:Close()
     local parent = MfaMenus[self.parent];
     addToPool(function() TriggerEvent("mfa_menu:select", nil); end);
-    parent:Open()
+    if (not parent) then
+        return;
+    end;
+    parent:Open();
 end
 
 --- Refresh menu
@@ -237,7 +240,6 @@ function Menu:AddButton(d)
         end
         TriggerEvent("mfa_menu:button",self.id, d.label or "", d.icon or "", d.desc or "", d.rLabel or "", d.rIcon or "", function(data)
             if not d.disabled then 
-                print(data.action)
                 if data.action == "onPressed" then 
                     if d.select then 
                         d.select(data.value)
@@ -272,6 +274,16 @@ function Menu:AddCheckbox(d)
         addToPool(function()
             TriggerEvent("mfa_menu:checkbox",self.id, d.label or "", d.icon or "", d.desc or "", d.value or false, function(data)
                 if data.action == "onPressed" then 
+                    if d.check then 
+                        if data.value then 
+                            d.check(true)
+                        end
+                    end
+                    if d.uncheck then 
+                        if not data.value then 
+                            d.uncheck(false)
+                        end
+                    end
                     if d.select then 
                         d.select(data.value)
                     end
